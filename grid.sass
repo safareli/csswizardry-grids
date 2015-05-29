@@ -1,0 +1,136 @@
+//TODO
+// responsivize grid modifiers
+// make it posible to use push or pull on sertane breke points
+// 
+
+$mobile-first : true
+$gutter : 24px
+$g-columns : 12
+$g-silent : false
+
+$g-selector: if($g-silent, unquote("%"), unquote("."))
+
+$use-markup-fix : true
+
+$gridName : "g"
+$blockPart : "-b"
+$blockName : #{$gridName}#{$blockPart}
+$g-sizeSeperator : 'of'
+$gridSelector : #{$g-selector}#{$gridName}
+$blockSelector : #{$g-selector}#{$blockName}
+$g-brake: (sm: "480px", md: "800px", lg: "1170px")
+
+
+=respond-to($val, $query : min-width, $media : screen)
+  @media #{$media} and (#{$query}: #{$val})
+    @content
+
+
+/**
+ * 1. Allow the grid system to be used on lists.
+ * 2. Remove any margins and paddings that might affect the grid system.
+ * 3. Apply a negative `margin-left` to negate the columns’ gutters.
+ * 4. Opera hack
+ */
+#{$gridSelector}
+  list-style: none              /* [1] */
+  margin: 0                     /* [2] */
+  padding: 0                    /* [2] */
+  margin-left: -1*$gutter       /* [3] */
+  @if not $use-markup-fix
+    letter-spacing: -0.31em
+    &, .opera:-o-prefocus          /* [4] */
+      word-spacing: -0.43em
+  
+  /**
+   * 1. Cause columns to stack side-by-side.
+   * 2. Space columns apart.
+   * 3. Align columns to the tops of each other.
+   * 4. Full-width unless told to behave otherwise.
+   * 5. Required to combine fluid widths and fixed gutters.
+   */
+  &#{$blockPart}
+    display: inline-block           /* [1] */
+    padding-left: $gutter           /* [2] */
+    vertical-align: top             /* [3] */
+    @if $mobile-first
+      width: 100%                   /* [4] */
+    -webkit-box-sizing: border-box  /* [5] */
+    -moz-box-sizing: border-box     /* [5] */
+    box-sizing: border-box          /* [5] */
+    @if not $use-markup-fix
+      letter-spacing: normal
+      word-spacing: normal
+  
+  &--rev
+    direction: rtl
+    text-align: left
+    > #{$blockSelector}
+      direction: ltr
+      text-align: left
+
+  &--full
+    margin-left: 0
+    > #{$blockSelector}
+      padding-left: 0
+
+  &--right
+    text-align: right
+    > #{$blockSelector}
+      text-align: left
+
+  &--center
+    text-align: center
+    > #{$blockSelector}
+      text-align: left
+
+  &--middle
+    > #{$blockSelector}
+      vertical-align: middle
+  &--bottom
+    > #{$blockSelector}
+      vertical-align: bottom
+
+  &--narrow
+    margin-left: -1*($gutter / 2)
+    > #{$blockSelector}
+      padding-left: ($gutter / 2)
+
+  &--wide
+    margin-left: -1*($gutter * 2)
+    > #{$blockSelector}
+      padding-left: ($gutter * 2)
+
+
+                  
+
+=device-type($property, $prefix)
+  #{$prefix}1#{$g-sizeSeperator}1
+    #{$property}: 100%
+  @for $column from 1 to $g-columns
+    @if $column != $g-columns
+      #{$prefix}#{$column}#{$g-sizeSeperator}#{$g-columns}
+        #{$property}: percentage($column / $g-columns)
+      @for $division from 1 to $g-columns
+        @if $column % $division == 0 and $g-columns % $division == 0
+          #{$prefix}#{$column / $division}#{$g-sizeSeperator}#{$g-columns / $division}
+            @extend #{$prefix}#{$column}#{$g-sizeSeperator}#{$g-columns}
+
++device-type('width', '#{$blockSelector}--')
++device-type('left', '#{$blockSelector}--push-')
++device-type('right', '#{$blockSelector}--pull-')
+  
+@each $name, $width in $g-brake
+  +respond-to($width)
+    +device-type('width', '#{$blockSelector}--'+$name+'-')
+    +device-type('left', '#{$blockSelector}--'+$name+'-push-')
+    +device-type('right', '#{$blockSelector}--'+$name+'-pull-')
+    #{$blockSelector}--#{$name}-push-f
+      left: auto
+    #{$blockSelector}--#{$name}-pull-f
+      right: auto
+
+[class*="#{$blockName}--pull"]
+  position: relative
+[class*="#{$blockName}--push"]
+  position: relative
